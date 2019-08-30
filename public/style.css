@@ -1,0 +1,116 @@
+ul li{
+  padding:0;margin:0;list-style:none
+}
+
+.top_menu{
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 0;
+}
+.top_menu li{
+  cursor: pointer;
+  width: 80px;
+  line-height: 20px;
+  position: relative;
+  margin-bottom: 10px;
+  margin-left: 5px;
+  margin-right: 5px;
+  border: #cecece 1px solid;
+  padding: 2px 4px;
+  color:#696969;
+}
+.top_menu li:hover{
+  background-color: #D3DCE6;
+}
+.top_menu li .tips{
+  display: block;
+  font-size:12px;
+  line-height: 12px;
+  color:#9b9c9e;
+}
+
+/* ****************************************************************************************** */
+.header, .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px;
+    height: 50px;
+    background-color: #E9EEF3;
+    color: #333;
+    text-align: center;
+  }
+  .footer{
+    height: 100px;
+    margin-top: 10px;
+  }
+
+
+.container{
+  display: flex;
+  /* justify-content: space-around; */
+  flex-wrap: wrap;
+  margin-top: 10px;
+  height: 100%;
+}
+  .aside {
+    height: 100%;
+    padding: 10px 0;
+    background-color: #E9EEF3;
+    /* color: #333; */
+    width: 320px;
+    text-align: center;
+
+  }
+.main{
+  flex-grow: 1; /* 占满剩余的 */
+  background-color: #E9EEF3;
+  margin-left: 10px;
+  position: relative;
+
+}
+.main .content{
+
+
+
+}
+.main .condition{
+
+}
+
+.link{
+  color: #1FB8FF;
+  user-select: none;
+  cursor: pointer;
+}
+.main .hover_tips{
+  position: absolute;
+  background-color:rgba(255,255,255,0.3);
+  min-height:200px;
+  padding: 10px 0;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  right: 0;
+  top:0;
+  color:#cecece;
+  pointer-events: none;
+  border: 1px dashed #cecece;
+}
+.main .hover_tips li{
+  min-width: 240px;
+  margin: 0 10px;
+}
+
+  .el-main {
+    background-color: #E9EEF3;
+    color: #333;
+    text-align: center;
+    line-height: 160px;
+  }
+
+  body > .el-container {
+    margin-bottom: 40px;
+  }

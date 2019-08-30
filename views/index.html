@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title> <%- title %></title>
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.19.0-beta.1/axios.min.js"></script>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui@2.10.1/lib/theme-chalk/index.css">
+    <!-- 引入组件库 -->
+    <script src="https://unpkg.com/element-ui@2.10.1/lib/index.js"></script>
+    <script src="https://cdn.bootcss.com/socket.io/2.2.0/socket.io.slim.js"></script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="root">
+        <div class="header">
+          <div>
+            <span>类型：</span>
+            <el-checkbox v-model="checkboxWeapon">武器</el-checkbox>
+            <el-checkbox v-model="checkboxAccouter">装备</el-checkbox>
+            <el-checkbox v-model="checkboxRole">角色</el-checkbox>
+            <el-checkbox v-model="checkboxPet">宠物</el-checkbox>
+          </div>
+          <div>
+            <el-checkbox v-model="showTips">显示进度</el-checkbox>
+            <el-button plain @click="getNewData" v-loading="loading">重新抓取数据</el-button>
+            <el-button @click="getDataById">测试</el-button>
+          </div>
+        </div>
+        <div class="container">
+            <div class="aside">
+              <p>服务器列表&nbsp;<el-checkbox v-model="serverCheckboxAll" @change="changeAll">全选</el-checkbox></p>
+              <ul class="top_menu">
+                    <li v-for ="item in serverData" v-loading="item.loading">
+                        <el-checkbox v-model="item.checkbox" @change="changeChild">{{item.child_server_name}}</el-checkbox>
+                        <span class="tips">{{item.server_name}}</span>
+                    </li>
+              </ul>
+            </div>
+            <div class="main">
+                <div class="condition">
+88
+                </div>
+                <div class="content">
+66
+
+                </div>
+                <!--  -->
+                <ul class="hover_tips" v-show="showTips">
+                  <li v-for="item in condition.serverDatas">
+                    {{item.child_server_name}}
+                    <span>{{item.message||'无进度信息'}}</span>
+                  </li>
+                  <!-- <li @click="showTips=false" class="link">关闭</li> -->
+                </ul>
+                <!--  -->
+            </div>
+        </div>
+        <div class="footer">
+
+        </div>
+    </div>
+    <script src="/index.js"></script>
+</body>
+</html>
