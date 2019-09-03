@@ -27,6 +27,7 @@
           <div>
             <el-checkbox v-model="showTips">显示进度</el-checkbox>
             <el-button plain @click="getNewData" v-loading="loading">重新抓取数据</el-button>
+            <el-button plain @click="getDataByInfo" v-loading="loading">抓取详情</el-button>
             <el-button @click="getDataById">测试</el-button>
           </div>
         </div>

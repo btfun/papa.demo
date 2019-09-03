@@ -40,6 +40,8 @@ let headers={
 
  module.exports = function(io){
 let socket;
+const pageSize=80;
+
   io.on('connection', function (socketP) {
       console.log('链接成功。。订单。。。。。。。' );
       socket=socketP;
@@ -56,7 +58,7 @@ const app={
 
     // this.getWeaponItemList() //武器
     // this.getAccouterItemList()//装备
-    this.GetItemInfoXMLByItemId(54316846);
+    // this.GetItemInfoXMLByItemId(54316846);
     // this.getRoleItemList() //角色暂时不抓取
     // this.getPetItemList()  //暂时不抓取
   },ServerList(){
@@ -108,7 +110,7 @@ const app={
       let objss2=Object.assign(objss,{
         serverId:serverId,
         pageIndex: page,
-        pageSize: 50
+        pageSize: pageSize
       }) ;
 
     request({
@@ -170,7 +172,7 @@ const app={
     let objss2=Object.assign(objss,{
       serverId:serverId,
       pageIndex: page,
-      pageSize: 50
+      pageSize: pageSize
     }) ;
 
     request({
@@ -240,7 +242,7 @@ const app={
     let objss2=Object.assign(objss,{
       serverId:serverId,
       pageIndex: page,
-      pageSize: 50
+      pageSize: pageSize
     }) ;
 
     request({
@@ -283,7 +285,7 @@ const app={
                      message: `第${page}页 装备数据保存成功，共${data.PageCount}页${data.TotalCount}条数据`
                    });
 
-            if( page+1 <= 5){ //|| data.PageCount
+            if( page+1 <= data.PageCount){ 
               setTimeout(()=>{
                   app.getAccouterItemList(page+1, serverId)
               },100 * Math.ceil(Math.random()*10) );
@@ -308,7 +310,7 @@ const app={
     let objss2=Object.assign(objss,{
       serverId:serverId,
       pageIndex: page,
-      pageSize: 50
+      pageSize: pageSize
     }) ;
 
     request({
@@ -358,7 +360,7 @@ const app={
       }
     })
 
-  },  GetItemInfoXMLByItemId(id){
+  },  GetItemInfoXMLByItemId(id,fn1,fn2){
 
     request({
       url:serverConf.GetItemInfoXMLByItemId.replace('{ItemInfoCode}',id),
@@ -369,14 +371,98 @@ const app={
       if(error)return console.error(error);
       if(200==response.statusCode && body){
         const $ = cheerio.load(body);
-        console.log(body)
-        console.log($('item').find('name').text() )
+        // console.log(body)
+        
+        let $child=$('attribs').children();
+        let obj={};
+        let data={};
 
+        $child.toArray().forEach(element => {
+          // console.log('>>>>>>>GetItemInfoXMLByItemId>>>>>>',element.name )
+            if(element.name=='attrib'){
+                //解析属性
+                if(!data[element.name]){
+                    data[element.name]=[];
+                }
+                if('green'==$(element).attr('color')){
+                  let attr={
+                    color: $(element).attr('color'),
+                    value: $(element).text(),
+                    type: $(element).attr('type')
+                  };
+                  data[element.name].push(attr);
+                }
+            }else{
+              //直接解析
+              data[element.name]=$(element).text();
+            }
+        });
+        
+        for (const key in data) {
+          
+          if( !Number.isNaN(Number(data[key])) ){
+            obj[key]=Number;
+          }else{
+            if(key=='color'){
+              obj[key]={ type: Schema.ObjectId, ref: 'color' }
+            }else{
+              obj[key]=typeof(data[key]);
+            }
+            console.log(obj[key],'-------------String----------',data[key])
+          }
+        }
+        color = new Schema({
+            color: String,
+            value: Number,
+            type: String
+        });
+
+        var DataRole= new Schema(Object.assign(obj,{
+          info: String,
+        }), { versionKey: false });//去掉版本控制 筛选
+        // console.log('data',data);
+
+        //  important_item 1 武器  0 装备  
+
+        if(1!=data.important_item &&  0!=data.important_item){
+          console.error('数据异常');
+          return  fn2 && fn2('数据异常,非装备和武器详情');
+        }
+
+        let dataInfoModel= {};
+
+        if( 0==data.important_item){ //武器
+          dataInfoModel= dbUtil.model('Weapon',DataRole);
+        }
+
+        if(1==data.important_item){ //装备 
+          dataInfoModel= dbUtil.model('Accouter',DataRole);
+        }
+
+        dataInfoModel.update({'ItemOrderCode': id}, Object.assign(obj,{
+          info: 1,//表示详情已获取
+        }),  function(err, datalist){
+            if(err)return  fn2 && fn2(err);
+        
+            console.log('查询：' ,datalist);
+            fn1 && fn1(datalist);
+        });
+
+        
       }
 
 
     })
 
+
+  },getListByServerCode(serverId,type,fn){
+     console.log('===================',type)
+  var DataRole= new Schema({}, { versionKey: false });
+  let  dataInfoModel= dbUtil.model(type,DataRole);
+        dataInfoModel.find({'ServerCode': serverId}, function(err, datalist){
+            if(err)return  fn && fn(err);
+            fn && fn(datalist)
+        });
 
   }
 

@@ -52,17 +52,91 @@ router.post('/get/data', function (req, res) {
 
 });
 
+router.post('/get/data/info', function (req, res) {
+  let ids=req.body.server_ids||[];
+ //查询某个服务器中的装备数据列表 获得id列表
+ let checkboxWeapon=req.body.checkboxWeapon||false;
+ let checkboxAccouter=req.body.checkboxAccouter||false;
+
+ let checkboxRole=req.body.checkboxRole||false;
+ let checkboxPet=req.body.checkboxPet||false;
+
+ ids.forEach((id,ins)=>{
+
+
+   setTimeout((_id)=>{
+    if(checkboxWeapon){
+      papaServers.getListByServerCode(_id,'Weapon', (data)=>{
+          console.log('Weapon',data.length)
+          if(data && data.length>0){
+
+          }
+          // length.ItemInfoCode
+      })
+    }
+    if(checkboxAccouter){
+      papaServers.getListByServerCode(_id,'Accouter', (data)=>{
+        console.log('Accouter',data.length)
+        if(data && data.length>0){
+
+          data.forEach((ite,index)=>{
+            if(!ite.info){
+              //没有详情的时候才抓取
+              setTimeout((item)=>{
+                // console.log('开始抓取',item.ItemInfoCode)
+                
+                item=JSON.parse(JSON.stringify(item));
+                console.log('开始抓取', item.ItemInfoCode )
+
+                if(item.ItemInfoCode){
+                  papaServers.GetItemInfoXMLByItemId(item.ItemInfoCode,(success)=>{ 
+                    console.log('success')
+                  },(error)=>{
+                    console.log('error',error)
+                  })
+                }
+              
+  
+              },1000 * index, ite)
+            }
+            
+          })
+        }
+
+      })
+    }
+
+
+   },1000*30*ins,id)//设置服务器之间的间隔时间
+ });
+
+ res.send({
+   status:200,
+   error:''
+ });
+
+
+});
+
+
 //仅供测试使用
 router.get('/get/data/byId', function (req, res) {
 
 
-    papaServers.GetItemInfoXMLByItemId(54316846)
+    papaServers.GetItemInfoXMLByItemId(54039205,(success)=>{
+          res.send({
+            status:200,
+            data: success,
+            error:''
+          });
+    },(error)=>{
+          res.send({
+            status:400,
+            data:{},
+            error: error
+          });
+    })
 
-    res.send({
-      status:200,
-      data:{},
-      error:''
-    });
 
 });
 

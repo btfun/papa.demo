@@ -132,21 +132,53 @@ new Vue({
              console.log(data);
          });
 
-       },getDataById(){
+       },getDataByInfo(){
 
-         axios.get('/api/get/data/byId',{
-           params:{
+        this.condition.serverIds=that.serverData.filter(_=>_.checkbox).map(_=>_.child_server_id);
+        this.condition.serverDatas=that.serverData.filter(_=>_.checkbox).map(_=>_);
 
-           }
-         }).then(function (res) {
-           if(200==res.data.status){
+        if(0==this.condition.serverIds.length)return this.$message.warning('服务器列表数据不能为空');
 
-           }else{
-             console.log(res.error);
-           }
-         }).catch(function (error) { console.log(error); });
+        that.$confirm('抓取数据过程比较漫长可能1-30分钟，请勿重复抓取','抓取详情数据？', {
+         confirmButtonText: '确定',
+         cancelButtonText: '取消',
+         type: 'warning'
+       }).then(() => {
+            
+        axios.post('/api/get/data/info',{
+          server_ids:this.condition.serverIds,
+          checkboxWeapon:false,
+          checkboxAccouter:true,
+          checkboxRole:false,
+          checkboxPet:false,
+        }).then(function (res) {
+          if(200==res.data.status){
 
-       }
+          }else{
+            console.log(res.error);
+          }
+        }).catch(function (error) { console.log(error); });
+
+
+       }).catch(() => {  });
+
+      
+
+      },getDataById(){
+
+        axios.get('/api/get/data/byId',{
+          params:{
+
+          }
+        }).then(function (res) {
+          if(200==res.data.status){
+
+          }else{
+            console.log(res.error);
+          }
+        }).catch(function (error) { console.log(error); });
+
+      }
 
     }
 })
