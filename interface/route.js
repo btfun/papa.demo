@@ -17,7 +17,7 @@ router.get('/get/server/data', function (req, res) {
         res.send({ status:200, data:docs, error:'' });
       }
   })
-  
+
 });
 
 /**
@@ -42,7 +42,7 @@ router.post('/get/data', function (req, res) {
       if(checkboxRole)papaServers.getRoleItemList(1,id, io);
       if(checkboxPet)papaServers.getPetItemList(1,id, io);
 
-    },1000*30*ins,id)//设置服务器之间的间隔时间
+    },1000*20*ins,id)//设置服务器之间的间隔时间
   });
 
   res.send({
@@ -84,22 +84,22 @@ router.post('/get/data/info', function (req, res) {
               //没有详情的时候才抓取
               setTimeout((item)=>{
                 // console.log('开始抓取',item.ItemInfoCode)
-                
+
                 item=JSON.parse(JSON.stringify(item));
-                console.log('开始抓取', item.ItemInfoCode )
+                console.log('开始抓取',_id , item.ItemInfoCode )
 
                 if(item.ItemInfoCode){
-                  papaServers.GetItemInfoXMLByItemId(item.ItemInfoCode,(success)=>{ 
+                  papaServers.GetItemInfoXMLByItemId(_id,'Accouter', item.ItemInfoCode,(success)=>{
                     console.log('success')
                   },(error)=>{
-                    console.log('error',error)
+                    console.log('error==',error)
                   })
                 }
-              
-  
+
+
               },1000 * index, ite)
             }
-            
+
           })
         }
 

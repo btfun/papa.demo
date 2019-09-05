@@ -139,12 +139,12 @@ new Vue({
 
         if(0==this.condition.serverIds.length)return this.$message.warning('服务器列表数据不能为空');
 
-        that.$confirm('抓取数据过程比较漫长可能1-30分钟，请勿重复抓取','抓取详情数据？', {
+        that.$confirm('抓取【详情数据】过程比较漫长可能1-30分钟，请勿重复抓取','抓取详情数据？', {
          confirmButtonText: '确定',
          cancelButtonText: '取消',
          type: 'warning'
        }).then(() => {
-            
+
         axios.post('/api/get/data/info',{
           server_ids:this.condition.serverIds,
           checkboxWeapon:false,
@@ -162,10 +162,10 @@ new Vue({
 
        }).catch(() => {  });
 
-      
+
 
       },getDataById(){
-
+        //测试数据
         axios.get('/api/get/data/byId',{
           params:{
 

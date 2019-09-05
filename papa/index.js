@@ -5,14 +5,16 @@ var serverConf = require('../conf/serverConf');
 var dataModel = require('./dataModel');
 var util = require('./util');
 
-var dbUtil = require('./dbUtil');
-var Schema = dbUtil.Schema;
+var mongoose = require('./dbUtil');
+var Schema = mongoose.Schema;
 var dataServerModel=dataModel.dataServerModel;
 
 var dataRoleModel={};
 var dataWeaponModel={};
 var dataAccouterModel={};
 var dataPetIModel={};
+
+let dataInfoModel= {};
 
 const serverId=20;
 let headers={
@@ -138,7 +140,7 @@ const app={
               info:{ type: String, default: "" }
             }), { versionKey: false });//去掉版本控制 筛选
 
-            dataRoleModel= dbUtil.model('Role',DataRole)
+            dataRoleModel= mongoose.model('Role',DataRole)
           }
 
 
@@ -200,7 +202,7 @@ const app={
               info:{ type: String, default: "" }
             }), { versionKey: false });//去掉版本控制 筛选
 
-            dataWeaponModel= dbUtil.model('Weapon',DataRole)
+            dataWeaponModel= mongoose.model('Weapon',DataRole)
           }
 
 
@@ -264,13 +266,16 @@ const app={
             for (const key in item) {
               obj[key]=typeof(item[key])
             }
+
+            console.log(obj,'-=-=-=')
+
             var DataRole= new Schema(Object.assign(obj,{
               date: { type: Date, default: Date.now },
               author: { type: String, default: "Ser"},
               info:{ type: String, default: "" }
             }), { versionKey: false });//去掉版本控制 筛选
 
-            dataAccouterModel= dbUtil.model('Accouter',DataRole)
+            dataAccouterModel= mongoose.model('Accouter',DataRole)
           }
 
 
@@ -285,7 +290,7 @@ const app={
                      message: `第${page}页 装备数据保存成功，共${data.PageCount}页${data.TotalCount}条数据`
                    });
 
-            if( page+1 <= data.PageCount){ 
+            if( page+1 <= data.PageCount){
               setTimeout(()=>{
                   app.getAccouterItemList(page+1, serverId)
               },100 * Math.ceil(Math.random()*10) );
@@ -338,13 +343,21 @@ const app={
               info:{ type: String, default: "" }
             }), { versionKey: false });//去掉版本控制 筛选
 
-            dataPetIModel= dbUtil.model('Pet',DataRole)
+            dataPetIModel= mongoose.model('Pet',DataRole)
           }
 
 
           dataPetIModel.insertMany(data.Data, function(err, docs){
             if(err) console.log(err);
             console.log(`第${page}页 宠物数据保存成功，共${data.PageCount}页${data.TotalCount}条数据`);
+            socket.emit('PetCount', {
+                     serverId: serverId,
+                     page: page,
+                     PageCount: data.PageCount,
+                     TotalCount: data.TotalCount,
+                     message: `第${page}页 装备数据保存成功，共${data.PageCount}页${data.TotalCount}条数据`
+                   });
+
             if( page+1 <= data.PageCount){
               setTimeout(()=>{
                   app.getPetItemList(page+1, serverId)
@@ -360,7 +373,7 @@ const app={
       }
     })
 
-  },  GetItemInfoXMLByItemId(id,fn1,fn2){
+  },  GetItemInfoXMLByItemId(serId, modelName, id,fn1,fn2){
 
     request({
       url:serverConf.GetItemInfoXMLByItemId.replace('{ItemInfoCode}',id),
@@ -372,7 +385,7 @@ const app={
       if(200==response.statusCode && body){
         const $ = cheerio.load(body);
         // console.log(body)
-        
+
         let $child=$('attribs').children();
         let obj={};
         let data={};
@@ -384,71 +397,94 @@ const app={
                 if(!data[element.name]){
                     data[element.name]=[];
                 }
-                if('green'==$(element).attr('color')){
+                // if('green'==$(element).attr('color')){
                   let attr={
                     color: $(element).attr('color'),
-                    value: $(element).text(),
+                    value: Number($(element).text()),
                     type: $(element).attr('type')
                   };
                   data[element.name].push(attr);
-                }
+                // }
             }else{
               //直接解析
               data[element.name]=$(element).text();
             }
         });
-        
+
+        //
         for (const key in data) {
-          
+
           if( !Number.isNaN(Number(data[key])) ){
             obj[key]=Number;
+            data[key]=Number(data[key]);
           }else{
-            if(key=='color'){
-              obj[key]={ type: Schema.ObjectId, ref: 'color' }
+            if(key=='attrib'){
+              obj[key]=[{
+                color: String,
+                value: Number,
+                type: String
+              }]
             }else{
               obj[key]=typeof(data[key]);
             }
-            console.log(obj[key],'-------------String----------',data[key])
+
           }
         }
-        color = new Schema({
-            color: String,
-            value: Number,
-            type: String
-        });
 
-        var DataRole= new Schema(Object.assign(obj,{
+        // console.log('obj==',obj,data);
+
+        var DataRole= new Schema({
+          ServerCode: Number,
+          ItemOrderCode: Number,
           info: String,
-        }), { versionKey: false });//去掉版本控制 筛选
-        // console.log('data',data);
+        }, { versionKey: false });//去掉版本控制 筛选
 
-        //  important_item 1 武器  0 装备  
-
-        if(1!=data.important_item &&  0!=data.important_item){
-          console.error('数据异常');
-          return  fn2 && fn2('数据异常,非装备和武器详情');
+        if(!dataInfoModel[modelName]){
+            try{
+              dataInfoModel[modelName]= mongoose.model(modelName);
+              if(dataInfoModel[modelName]){
+                let obj=new dataInfoModel[modelName]();
+              }
+              console.log('你大爷')
+            }catch(e){
+              dataInfoModel[modelName]= mongoose.model(modelName,DataRole);
+              console.log('滚你妈')
+            }
         }
 
-        let dataInfoModel= {};
+        console.log(modelName, 'important_item==========',dataInfoModel[modelName]);
 
-        if( 0==data.important_item){ //武器
-          dataInfoModel= dbUtil.model('Weapon',DataRole);
+
+        if(1==data.important_item){ //装备 ,DataRole
+          // dataInfoModel= mongoose.model(modelName,DataRole);
+
+          // if(0==Object.keys(dataAccouterModel).length){
+          //   try{
+          //     dataInfoModel= mongoose.model('Accouter');
+          //   }catch(e){
+          //     dataInfoModel= mongoose.model('Accouter',DataRole);
+          //   }
+          // }else{
+          //   dataInfoModel=dataAccouterModel;
+          // }
+
         }
 
-        if(1==data.important_item){ //装备 
-          dataInfoModel= dbUtil.model('Accouter',DataRole);
-        }
 
-        dataInfoModel.update({'ItemOrderCode': id}, Object.assign(obj,{
-          info: 1,//表示详情已获取
-        }),  function(err, datalist){
+        dataInfoModel[modelName].find({ServerCode: serId, 'ItemOrderCode': id},function(err, datalist){
+          console.log(err,'find:---' ,datalist);
+        })
+
+        dataInfoModel[modelName].update({ServerCode: serId, 'ItemOrderCode': id}, {
+          info: JSON.stringify(obj), //存入数据json字符串
+        }, { multi :true }, function(err, datalist){
             if(err)return  fn2 && fn2(err);
-        
-            console.log('查询：' ,datalist);
+
+            console.log('update：' ,datalist);
             fn1 && fn1(datalist);
         });
 
-        
+
       }
 
 
@@ -458,7 +494,9 @@ const app={
   },getListByServerCode(serverId,type,fn){
      console.log('===================',type)
   var DataRole= new Schema({}, { versionKey: false });
-  let  dataInfoModel= dbUtil.model(type,DataRole);
+  let  dataInfoModel= mongoose.model(type,DataRole);
+
+
         dataInfoModel.find({'ServerCode': serverId}, function(err, datalist){
             if(err)return  fn && fn(err);
             fn && fn(datalist)
