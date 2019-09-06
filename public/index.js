@@ -7,7 +7,7 @@ var dataAccouterModel={};
 var dataPetIModel={};
 var socket = io.connect('//127.0.0.1:5010/');
 socket.on('disconnect', function() {
-  console.log(666)
+  console.log('长连接已断开')
     // connected = false;
  // socket.connect();
 
@@ -20,6 +20,7 @@ new Vue({
       checkboxRole:false,
       checkboxPet:false,
       loading:false,
+      types:['Accouter','Weapon','Role','Pet'],
       serverCheckboxAll:false,
       serverData:[],
       condition:{
@@ -41,7 +42,21 @@ new Vue({
         })
       }, changeChild(ite){
           this.serverCheckboxAll=that.serverData.every(_=>_.checkbox);
-      }, getServerData(){
+      }, getRemotServerData(){
+        axios.get('/api/remot/server/data').then(function (res) {
+          if(200==res.data.status){
+              this.$message.success('正在抓取');
+              setTimeout(()=>{
+                that.getServerData()
+              },2000)
+          }else{
+            console.log(res.error);
+          }
+        }).catch(function (error) {
+          console.log(error);
+        });
+      },
+      getServerData(){
             axios.get('/api/get/server/data').then(function (res) {
               if(200==res.data.status){
 
@@ -76,10 +91,10 @@ new Vue({
              this.loading=!this.loading;
              axios.post('/api/get/data',{
                server_ids:this.condition.serverIds,
-               checkboxWeapon:false,
-               checkboxAccouter:true,
-               checkboxRole:false,
-               checkboxPet:false,
+               checkboxWeapon: that.checkboxWeapon,
+               checkboxAccouter: that.checkboxAccouter,
+               checkboxRole: that.checkboxRole,
+               checkboxPet: that.checkboxPet,
              }).then(function (res) {
                if(200==res.data.status){
 
@@ -92,8 +107,7 @@ new Vue({
 
 
        },socketOn(){
-
-         socket.on('AccouterCount', function (data) {
+         function gy(data){
            let serData=that.condition.serverDatas.filter(_=>_.child_server_id==data.serverId)[0]||{};
            // console.log('serData',serData);
            if(data.page==data.PageCount){
@@ -104,33 +118,35 @@ new Vue({
              // console.log(data.message);
              serData.message=data.message;
              serData.loading=true;
-
-           }
-
-             console.log(serData.message);
-         });
-         socket.on('WeaponCount', function (data) {
-           let serData=that.condition.serverDatas.filter(_=>_.child_server_id==data.serverId)[0]||{};
-           // console.log('serData',serData);
-
-           if(data.page==data.PageCount){
-              that.loading=false;
-              serData.message=data.message;
-              serData.loading=false;
-           }else{
-             // console.log(data.message);
-             serData.message=data.message;
-             serData.loading=true;
            }
              console.log(serData.message);
-         });
+         }
 
-         socket.on('Role', function (data) {
-             console.log(data);
-         });
-         socket.on('Pet', function (data) {
-             console.log(data);
-         });
+
+        that.types.forEach((_)=>{
+          //列表抓取的监听
+          socket.on(_+'Count', function (data) {
+            gy(data)
+          });
+          //详情抓取的监听
+          socket.on(_+'InfoCount', function (data) {
+              console.log(data);
+          });
+        })
+
+         // socket.on('AccouterCount', function (data) {
+         //  gy(data)
+         // });
+         // socket.on('WeaponCount', function (data) {
+         //   gy(data)
+         // });
+         // socket.on('RoleCount', function (data) {
+         //   gy(data)
+         // });
+         // socket.on('PetCount', function (data) {
+         //   gy(data)
+         // });
+
 
        },getDataByInfo(){
 
@@ -146,11 +162,11 @@ new Vue({
        }).then(() => {
 
         axios.post('/api/get/data/info',{
-          server_ids:this.condition.serverIds,
-          checkboxWeapon:false,
-          checkboxAccouter:true,
-          checkboxRole:false,
-          checkboxPet:false,
+          server_ids: this.condition.serverIds,
+          checkboxWeapon: that.checkboxWeapon,
+          checkboxAccouter: that.checkboxAccouter,
+          checkboxRole: that.checkboxRole,
+          checkboxPet: that.checkboxPet,
         }).then(function (res) {
           if(200==res.data.status){
 

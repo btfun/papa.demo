@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
 var logger = require('morgan');
-mongoose.connect('mongodb://localhost/list'); //连接到mongoDB的todo数据库
+mongoose.connect('mongodb://localhost/wendao'); //连接到mongoDB的todo数据库
+
+
 //该地址格式：mongodb://[username:password@]host:port/database[?options]
 //默认port为27017
 

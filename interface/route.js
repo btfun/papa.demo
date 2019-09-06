@@ -1,21 +1,27 @@
 var express = require('express');
 var router = express(); // the main router
-var dataModel = require('../papa/dataModel');
-var dataServerModel=dataModel.dataServerModel;
+// var dataModel = require('../papa/dataModel');
+// var dataServerModel=dataModel.dataServerModel;
 
 
 module.exports=function(io){
 var papaServers = require('../papa/index')(io);
 
+router.get('/remot/server/data', function (req, res) {
+
+  papaServers.ServerList((error,data)=>{
+    if(error)return res.send({ status:400, error:err });
+  })
+
+  res.send({ status:200, error:'' });
+});
+
 router.get('/get/server/data', function (req, res) {
 
-    // 查询服务器列表数据
-    dataServerModel.find({author: "Ser"}, function(err, docs){
-      if(err){
-        res.send({ status:400, error:err });
-      }else{
-        res.send({ status:200, data:docs, error:'' });
-      }
+  papaServers.getServerList((error,data)=>{
+    if(error)return res.send({ status:400, error:err });
+
+    res.send({ status:200, data:data, error:'' });
   })
 
 });
@@ -69,7 +75,25 @@ router.post('/get/data/info', function (req, res) {
       papaServers.getListByServerCode(_id,'Weapon', (data)=>{
           console.log('Weapon',data.length)
           if(data && data.length>0){
-
+            data.forEach((ite,index)=>{
+              if(!ite.info){
+                //没有详情的时候才抓取
+                setTimeout((item)=>{
+                  item=JSON.parse(JSON.stringify(item));
+                  console.log(_id , item.ItemInfoCode ,item.info)
+                  if(item.ItemInfoCode && (!item.info || !Object.keys(item.info).length ) ){
+                    console.log('开始抓取',_id , item.ItemInfoCode ,item.info)
+                    papaServers.GetItemInfoXMLByItemId(_id,'Weapon', item.ItemInfoCode,(success)=>{
+                      console.log('success')
+                    },(error)=>{
+                      console.log('error==',error)
+                    })
+                  }
+                },500 * index, ite)
+              }
+            })
+          }else{
+            socket.emit(`WeaponInfoCount`, { status: 404 });
           }
           // length.ItemInfoCode
       })
@@ -78,34 +102,58 @@ router.post('/get/data/info', function (req, res) {
       papaServers.getListByServerCode(_id,'Accouter', (data)=>{
         console.log('Accouter',data.length)
         if(data && data.length>0){
-
           data.forEach((ite,index)=>{
             if(!ite.info){
               //没有详情的时候才抓取
               setTimeout((item)=>{
-                // console.log('开始抓取',item.ItemInfoCode)
-
                 item=JSON.parse(JSON.stringify(item));
-                console.log('开始抓取',_id , item.ItemInfoCode )
-
-                if(item.ItemInfoCode){
+                console.log(_id , item.ItemInfoCode ,item.info)
+                if(item.ItemInfoCode && (!item.info || !Object.keys(item.info).length ) ){
+                  console.log('开始抓取',_id , item.ItemInfoCode ,item.info)
                   papaServers.GetItemInfoXMLByItemId(_id,'Accouter', item.ItemInfoCode,(success)=>{
                     console.log('success')
                   },(error)=>{
                     console.log('error==',error)
                   })
                 }
-
-
-              },1000 * index, ite)
+              },500 * index, ite)
             }
-
           })
+
+        }else{
+          socket.emit(`AccouterInfoCount`, { status: 404 });
         }
 
       })
     }
+    if(checkboxPet){
+      papaServers.getListByServerCode(_id,'Pet', (data)=>{
+        console.log('pet',data.length)
+        if(data && data.length>0){
+          data.forEach((ite,index)=>{
+            if(!ite.info){
+              //没有详情的时候才抓取
+              setTimeout((item)=>{
+                item=JSON.parse(JSON.stringify(item));
+                console.log(_id , item.ItemInfoCode )
+                if(item.ItemInfoCode && (!item.info || !Object.keys(item.info).length )){
+                  console.log('开始抓取',_id , item.ItemInfoCode ,item.info)
+                  papaServers.GetItemInfoXMLByItemId(_id,'pet', item.ItemInfoCode,(success)=>{
+                    console.log('success')
+                  },(error)=>{
+                    console.log('error==',error)
+                  })
+                }
+              },500 * index, ite)
+            }
 
+          })
+        }else{
+          socket.emit(`PetInfoCount`, { status: 404 });
+        }
+
+      })
+    }
 
    },1000*30*ins,id)//设置服务器之间的间隔时间
  });
@@ -118,25 +166,93 @@ router.post('/get/data/info', function (req, res) {
 
 });
 
+const request = require('request');
+var serverConf = require('../conf/serverConf');
+var mongoose = require('../papa/dbUtil');
+var Schema = mongoose.Schema;
+
+let dataInfoModel= {};
 
 //仅供测试使用
-router.get('/get/data/byId', function (req, res) {
+router.get('/get/data/byId',  function (req, res) {
 
+ function init001(ms){
+    return new Promise(function(resolve, reject){
+      setTimeout(()=>{
+        console.log('=====>>',ms)
+        resolve({ data: 'success' })
+      },ms*100)
+    });
 
-    papaServers.GetItemInfoXMLByItemId(54039205,(success)=>{
+  }
+  let data={
+    name:'你大爷的???',
+    age:288,
+    sex:'女'
+  };
+  let search={ServerCode: 368, ItemInfoCode: 54744052};
+
+  var DataRole= new Schema({
+    ServerCode: Number,
+    ItemInfoCode: Number,
+    info: Object,
+    name: String,
+    age: Number,
+    sex: String
+  }, { versionKey: false });//去掉版本控制 筛选
+  let modelName='oop';
+
+  if(!dataInfoModel[modelName]){
+      try{
+        dataInfoModel[modelName]= mongoose.model(modelName);
+      }catch(e){
+        dataInfoModel[modelName]= mongoose.model(modelName,DataRole);
+      }
+  }
+
+  // dataInfoModel[modelName].insertMany([
+  //   {
+  //     ServerCode: 368,
+  //     ItemInfoCode: 54744052,
+  //     info:{},
+  //     name:'你大爷的',
+  //     age:28,
+  //     sex:'女'
+  //   }
+  // ], function(err, docs){
+  //   if(err) console.log(err);
+  //   console.log('更改成功：' , docs);
+  // });
+
+  dataInfoModel[modelName].find(search, function(err, datalist){
+    console.log(err,'find:---' ,datalist.length);
+  })
+
+  dataInfoModel[modelName].update(search, {info: data}, {multi: true}, function(err, docs){
+       if(err)console.log('error' , err);
+
+      console.log('更改成功：' , docs);
+  })
+    // papaServers.GetItemInfoXMLByItemId(54039205,(success)=>{
+    //       res.send({
+    //         status:200,
+    //         data: success,
+    //         error:''
+    //       });
+    // },(error)=>{
+    //       res.send({
+    //         status:400,
+    //         data:{},
+    //         error: error
+    //       });
+    // })
+console.log('success===');
+
           res.send({
             status:200,
-            data: success,
+            data: 'success',
             error:''
           });
-    },(error)=>{
-          res.send({
-            status:400,
-            data:{},
-            error: error
-          });
-    })
-
 
 });
 

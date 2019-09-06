@@ -18,6 +18,7 @@
     <div id="root">
         <div class="header">
           <div>
+            <el-button plain @click="getRemotServerData" >抓取服务器列表数据</el-button>
             <span>类型：</span>
             <el-checkbox v-model="checkboxWeapon">武器</el-checkbox>
             <el-checkbox v-model="checkboxAccouter">装备</el-checkbox>
