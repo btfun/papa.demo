@@ -7,3 +7,13 @@
   第二部：设计筛选条件
   第三部：设计自动分析算法
   第四部：列出筛选结果
+
+第一次
+mongoose.model('xx',Schema({
+    server_id: Number,
+    server_name: String,
+    info: String,
+}))
+第二次
+mongoose.model('xx')
+直接更新 info 这个值 不生效 查找能找到对应的数据 用的多条更新{multi: true}

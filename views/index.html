@@ -44,10 +44,22 @@
             </div>
             <div class="main">
                 <div class="condition">
-88
+
+                  <ul class="conditionul">
+                        <li v-for ="item in serverData" >
+                            <el-checkbox v-model="item.checkbox" @change="changeChild">{{item.child_server_name}}</el-checkbox>
+                            <span class="tips">{{item.server_name}}</span>
+                        </li>
+                  </ul>
+
                 </div>
                 <div class="content">
-66
+                  <ul class="uul">
+                    <li v-for="iter in content.titles">
+                      <span class="uulname">{{iter.ItemName}} &nbsp;<span>({{iter.child.length}})</span> </span>
+                      <span class="price">价格：￥{{iter.min}} 至￥{{iter.max}}</span>
+                    </li>
+                  </ul>
 
                 </div>
                 <!--  -->

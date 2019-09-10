@@ -128,11 +128,18 @@ const app={
             var DataRole= new Schema(Object.assign(obj,{
               date: { type: Date, default: Date.now },
               author: { type: String, default: "Ser"},
-              info:{ type: Object, default: {} }
+              info:{ type: String, default: '' }
             }), { versionKey: false });//去掉版本控制 筛选
 
-            dataRoleModel= mongoose.model('Role',DataRole);
-            console.log('dataRoleModel=====',dataRoleModel)
+            try{
+              console.log('你大爷')
+              dataRoleModel= mongoose.model('Role');
+            }catch(e){
+              console.log('你大妈')
+              dataRoleModel= mongoose.model('Role',DataRole);
+            }
+
+            // dataRoleModel= mongoose.model('Role',DataRole);
 
           }
 
@@ -192,12 +199,20 @@ const app={
             var DataRole= new Schema(Object.assign(obj,{
               date: { type: Date, default: Date.now },
               author: { type: String, default: "Ser"},
-              info:{ type: Object, default: {} }
+              info:{ type: String, default: '' }
             }), { versionKey: false });//去掉版本控制 筛选
 
-            dataWeaponModel= mongoose.model('Weapon',DataRole)
-          }
+            try{
+              console.log('你大爷')
+              dataWeaponModel= mongoose.model('Weapon')
+            }catch(e){
+              console.log('你大妈')
+              dataWeaponModel= mongoose.model('Weapon',DataRole)
+            }
 
+            // dataWeaponModel= mongoose.model('Weapon',DataRole)
+          }
+          console.log(dataWeaponModel,'dataWeaponModel???')
 
           dataWeaponModel.insertMany(data.Data, function(err, docs){
             if(err) return console.log(err);
@@ -265,10 +280,16 @@ const app={
             var DataRole= new Schema(Object.assign(obj,{
               date: { type: Date, default: Date.now },
               author: { type: String, default: "Ser"},
-              info:{ type: Object, default: {} }
+              info:{ type: String, default: '' }
             }), { versionKey: false });//去掉版本控制 筛选
-
-            dataAccouterModel= mongoose.model('Accouter',DataRole)
+            try{
+              console.log('你大爷')
+              dataAccouterModel= mongoose.model('Accouter')
+            }catch(e){
+              console.log('你大妈')
+              dataAccouterModel= mongoose.model('Accouter',DataRole)
+            }
+            // dataAccouterModel= mongoose.model('Accouter',DataRole)
           }
 
 
@@ -333,10 +354,17 @@ const app={
             var DataRole= new Schema(Object.assign(obj,{
               date: { type: Date, default: Date.now },
               author: { type: String, default: "Ser"},
-              info:{ type: Object, default: {} }
+              info:{ type: String, default: '' }
             }), { versionKey: false });//去掉版本控制 筛选
+            try{
+              console.log('你大爷')
+              dataPetIModel= mongoose.model('Pet')
 
-            dataPetIModel= mongoose.model('Pet',DataRole)
+            }catch(e){
+              console.log('你大妈')
+              dataPetIModel= mongoose.model('Pet',DataRole)
+            }
+            // dataPetIModel= mongoose.model('Pet',DataRole)
           }
 
           dataPetIModel.insertMany(data.Data, function(err, docs){
@@ -405,8 +433,9 @@ const app={
             }
         });
 
-        //原始数据
-        data.info=body;
+        //保存原始数据 列表数据以字符串形式保存
+        data.info=encodeURIComponent(body);
+        if(data.attrib)data.attrib=(JSON.stringify(data.attrib));
 
         //
         for (const key in data) {
@@ -430,11 +459,16 @@ const app={
 
         // console.log('obj==',obj,data);
 
+        // var DataRole= new Schema(Object.assign(obj,{
+        //   ServerCode: Number,
+        //   ItemInfoCode: Number,
+        //   info: String,
+        // }), { versionKey: false });//去掉版本控制 筛选
 
         var DataRole= new Schema({
           ServerCode: Number,
           ItemInfoCode: Number,
-          info: Object,
+          info: String,
         }, { versionKey: false });//去掉版本控制 筛选
 
         console.log(modelName, 'info========',{ServerCode: serId, ItemInfoCode: id});
@@ -451,29 +485,35 @@ const app={
         }
 
 
+        let search={ServerCode: serId, ItemInfoCode: id};
+     
 
-
-        dataInfoModel[modelName].find({ServerCode: serId, ItemInfoCode: id}, function(err, datalist){
-          console.log(err,'find:---' ,datalist.length);
-        })
-
-        dataInfoModel[modelName].update({ServerCode: serId, ItemInfoCode: id}, {info: data }, {multi: true}, function(err, docs){
+        dataInfoModel[modelName].find(search, function(err, datalist){
+          console.log(err,'find:-11111111111--' ,datalist.length);
+        });
+        dataInfoModel[modelName].update(search, {info: (JSON.stringify(data)) }, {multi: true}, function(err, docs){
              if(err)return  fn2 && fn2(err);
+             
+            console.log(`${!!docs.ok?'成功':'失败'}`,'更改：' , docs);
 
-            console.log('更改成功：' , docs);
-            socket.emit(`${modelName}InfoCount`, {
-                     serverId: serId,
-                     ItemInfoCode: id,
-                     status:200
-                   });
+            dataInfoModel[modelName].find(search, function(err, datalist){
+              console.log(err,'find:---' , search, datalist[0].info);
+            })
+
+            // socket.emit(`${modelName}InfoCount`, {
+            //          serverId: serId,
+            //          ItemInfoCode: id,
+            //          status:200
+            //        });
 
              fn1 && fn1(docs);
         })
-
+ 
         // dataInfoModel[modelName].updateMany({ServerCode: serId, ItemInfoCode: id},
         //   { $set:{info: JSON.stringify(data)} }, function(err, datalist){
         //     if(err)return  fn2 && fn2(err);
-        //
+        //     console.log(`${!!datalist.ok?'成功':'失败'}`,'更改：' , datalist);
+
         //     console.log('update：' ,datalist);
         //     fn1 && fn1(datalist);
         // });
@@ -507,6 +547,52 @@ const app={
         fn && fn(err,docs);
 
     })
+
+  },getTestItemInfoXMLByItemId(fn){
+
+    let data={
+      name:'草拟祖宗28代??狗杂?尼玛?380代？？===',
+      age:288,
+      sex:'女'
+    };
+    let search={ServerCode: 368 };
+  
+    var DataRole= new Schema({
+      // ServerCode: Number,
+      // ItemInfoCode: Number,
+      info: String,//必须有
+    }, { versionKey: false });//去掉版本控制 筛选
+
+    let modelName='Accouter';
+  
+    if(!dataInfoModel[modelName]){
+        try{
+          console.log('你大爷')
+          dataInfoModel[modelName]= mongoose.model(modelName);
+        }catch(e){
+          console.log('你大妈')
+          dataInfoModel[modelName]= mongoose.model(modelName,DataRole);
+        }
+    }
+  
+    dataInfoModel[modelName].find(search, { }, function(err, datalist){
+
+      // console.log(err,'find:---' ,datalist);
+      fn && fn(datalist)
+    })
+
+  
+    // dataInfoModel[modelName].update(search, {info: JSON.stringify(data) }, {multi: true}, function(err, docs){
+    //      if(err)console.log('error' , err);
+    //     console.log('更改成功：' , docs);
+    //     dataInfoModel[modelName].find(search, function(err, datalist){
+          
+    //       // let data=JSON.parse(JSON.stringify(datalist));
+    //       console.log(err,'find:---' ,datalist[0].info);
+    //     })
+  
+    // })
+   
 
   }
 

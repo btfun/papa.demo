@@ -27,13 +27,21 @@ new Vue({
         serverDatas:[],
         serverIds:[]
       },
-      showTips:false
+      showTips:false,
+      content:{
+        titles:[],
+        datas:[],
+      }
 
     },
     created(){
         that=this
         this.getServerData()
         this.socketOn()
+
+        let titles=sessionStorage.getItem('titles');
+        if(titles) that.content.titles=JSON.parse(titles);
+
     },
     methods:{
       changeAll(val){
@@ -188,7 +196,22 @@ new Vue({
           }
         }).then(function (res) {
           if(200==res.data.status){
+            console.log(res.data);
+            let data=res.data.data;
 
+            data.titles.forEach((item)=>{
+              let lis=item.child.map(_=>_.CurrentItemPrice);
+              console.log(lis);
+
+              item.max=Math.max.apply(null,lis);
+              item.min=Math.min.apply(null,lis);
+
+            })
+
+            that.content.titles=data.titles
+            sessionStorage.setItem('titles',JSON.stringify(data.titles))
+            // that.content.datas
+ 
           }else{
             console.log(res.error);
           }
