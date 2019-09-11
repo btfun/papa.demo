@@ -215,7 +215,10 @@ router.get('/get/data/byId',  function (req, res) {
         ServerName: item.ServerName,
         ItemInfoCode: item.ItemInfoCode,
         ItemName: item.ItemName,
-        CurrentItemPrice: item.CurrentItemPrice
+        ItemLevel: item.ItemLevel,
+        ItemTypeId: item.ItemTypeId,//类型： 帽子202，衣服203，鞋子204，法宝205，首饰206，娃娃207，腰带208
+        CurrentItemPrice: item.CurrentItemPrice,
+        OprateHtml: item.OprateHtml, //购买链接
       };
 
     });
