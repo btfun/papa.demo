@@ -194,6 +194,8 @@ console.log(id,ins,'服务区列表');
 //仅供测试使用
 router.get('/get/data/byId',  function (req, res) {
 
+  let serverId=req.query.serverId;
+
   papaServers.getTestItemInfoXMLByItemId((data)=>{
 
      data=JSON.parse(JSON.stringify(data));
@@ -241,7 +243,7 @@ router.get('/get/data/byId',  function (req, res) {
     });
 
 
-  });
+  },serverId);
  
 
   // dataInfoModel[modelName].insertMany([

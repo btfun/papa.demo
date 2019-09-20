@@ -23,27 +23,42 @@ new Vue({
       types:['Accouter','Weapon','Role','Pet'],
       serverCheckboxAll:false,
       serverData:[],
+      serverConditionData:[],
       condition:{
         serverDatas:[],
         serverIds:[]
       },
       showTips:false,
-      content:{
-        titles:[],
-        datas:[],
-      }
+      conditionSearchData:[],
 
     },
     created(){
         that=this
         this.getServerData()
         this.socketOn()
-
-        let titles=sessionStorage.getItem('titles');
-        if(titles) that.content.titles=JSON.parse(titles);
+        //查询内容展示列表
+        let titles=sessionStorage.getItem('conditionSearchData');
+        if(titles){
+          that.conditionSearchData=JSON.parse(titles);
+          setTimeout(()=>{
+            that.serverConditionData.forEach((_)=>{
+              _.checkbox=that.conditionSearchData.some(c=>c.child_server_id==_.child_server_id);
+            })
+          },1000)
+        }
 
     },
-    methods:{
+    methods:{ 
+      changeSearch(item){
+
+        if(!that.conditionSearchData.some(_=>_.child_server_id==item.child_server_id)){
+          that.conditionSearchData.push(item)
+        }
+        console.log(item.child_server_id)
+        //勾选查询数据 不勾选则隐藏数据
+        if(item.checkbox && 0==item.titles.length)that.getDataById(item)
+
+      },
       changeAll(val){
         that.serverData.forEach((item)=>{
           item.checkbox=val;
@@ -72,9 +87,10 @@ new Vue({
                   item.checkbox=false;
                   item.loading=false;
                   item.message='';
+                  item.titles=[];
                 })
                 that.serverData=res.data.data;
-
+                that.serverConditionData=JSON.parse(JSON.stringify(that.serverData));
                 // console.log(that.serverData);
               }else{
                 console.log(res.error);
@@ -142,20 +158,6 @@ new Vue({
           });
         })
 
-         // socket.on('AccouterCount', function (data) {
-         //  gy(data)
-         // });
-         // socket.on('WeaponCount', function (data) {
-         //   gy(data)
-         // });
-         // socket.on('RoleCount', function (data) {
-         //   gy(data)
-         // });
-         // socket.on('PetCount', function (data) {
-         //   gy(data)
-         // });
-
-
        },getDataByInfo(){
 
         this.condition.serverIds=that.serverData.filter(_=>_.checkbox).map(_=>_.child_server_id);
@@ -188,28 +190,36 @@ new Vue({
 
 
 
-      },getDataById(){
+      },getDataById(parms){
+
         //测试数据
         axios.get('/api/get/data/byId',{
           params:{
-
+            serverId: parms.child_server_id
           }
         }).then(function (res) {
           if(200==res.data.status){
             console.log(res.data);
+
             let data=res.data.data;
 
             data.titles.forEach((item)=>{
               let lis=item.child.map(_=>_.CurrentItemPrice);
-              console.log(lis);
+              console.log(item);
+              item.child=item.child.sort(function(a,b){
+                return a.ItemLevel>b.ItemLevel?1:-1;
+              });
+              item.child=item.child.sort(function(a,b){
+                return a.ItemLevel==b.ItemLevel && a.CurrentItemPrice> b.CurrentItemPrice ? 1:-1;
+              });
 
               item.max=Math.max.apply(null,lis);
               item.min=Math.min.apply(null,lis);
 
             })
 
-            that.content.titles=data.titles
-            sessionStorage.setItem('titles',JSON.stringify(data.titles))
+            parms.titles=data.titles
+            sessionStorage.setItem('conditionSearchData',JSON.stringify(that.conditionSearchData))
             // that.content.datas
  
           }else{

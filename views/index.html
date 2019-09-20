@@ -46,19 +46,25 @@
                 <div class="condition">
 
                   <ul class="conditionul">
-                        <li v-for ="item in serverData" >
-                            <el-checkbox v-model="item.checkbox" @change="changeChild">{{item.child_server_name}}</el-checkbox>
+                        <li v-for ="item in serverConditionData" >
+                            <el-checkbox v-model="item.checkbox" @change="changeSearch(item)">{{item.child_server_name}}</el-checkbox>
                             <span class="tips">{{item.server_name}}</span>
-                        </li>
+                        </li> 
                   </ul>
 
                 </div>
                 <div class="content">
                   
-                  <ul class="uul">
+                  <ul class="uul" v-for="content in conditionSearchData" v-if="content.checkbox">
                     <li v-for="iter in content.titles">
-                      <span class="uulname">{{iter.ItemName}} &nbsp;<span>({{iter.child.length}})</span> </span>
-                      <span class="price">价格：￥{{iter.min}} 至￥{{iter.max}}</span>
+                      <div>
+                          <span class="uulname">{{iter.ItemName}} &nbsp;<span>({{iter.child.length}})</span> </span>
+                          <span>所在游戏区：{{content.child_server_name}}</span>
+                          <span class="price">价格：￥{{iter.min}} 至￥{{iter.max}}</span>
+                      </div>
+                      <ul class="child">
+                        <li v-for="itec in iter.child">级别：{{itec.ItemLevel}}，<a target="_blank" :href="'http://qibao.gyyx.cn/Buy/Order?ItemCode='+itec.ItemInfoCode">价格：￥{{itec.CurrentItemPrice}} </a> </li>
+                      </ul>
                     </li>
                   </ul>
 

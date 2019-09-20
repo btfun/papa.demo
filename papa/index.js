@@ -548,15 +548,11 @@ const app={
 
     })
 
-  },getTestItemInfoXMLByItemId(fn){
+  },getTestItemInfoXMLByItemId(fn ,ServerCode){
 
-    let data={
-      name:'草拟祖宗28代??狗杂?尼玛?380代？？===',
-      age:288,
-      sex:'女'
-    };
-    let search={ServerCode: 368 };
-  
+     
+    let search={ServerCode: Number(ServerCode)||368 };
+
     var DataRole= new Schema({
       // ServerCode: Number,
       // ItemInfoCode: Number,
@@ -580,18 +576,7 @@ const app={
       // console.log(err,'find:---' ,datalist);
       fn && fn(datalist)
     })
-
-  
-    // dataInfoModel[modelName].update(search, {info: JSON.stringify(data) }, {multi: true}, function(err, docs){
-    //      if(err)console.log('error' , err);
-    //     console.log('更改成功：' , docs);
-    //     dataInfoModel[modelName].find(search, function(err, datalist){
-          
-    //       // let data=JSON.parse(JSON.stringify(datalist));
-    //       console.log(err,'find:---' ,datalist[0].info);
-    //     })
-  
-    // })
+ 
    
 
   }
